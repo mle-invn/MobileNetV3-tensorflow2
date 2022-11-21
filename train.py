@@ -24,10 +24,10 @@ from mobilenetv3_factory import build_mobilenetv3
 from datasets import build_dataset
 
 
-config = tf.ConfigProto()
+config = tf.compat.v1.ConfigProto
 config.gpu_options.allow_growth = True
-sess = tf.Session(config=config)
-tf.keras.backend.set_session(sess)
+# sess = tf.Session(config=config)
+# tf.keras.backend.set_session(sess)
 
 _available_datasets = [
     "mnist",
@@ -35,9 +35,10 @@ _available_datasets = [
     ]
 
 _available_optimizers = {
-    "rmsprop": tf.train.RMSPropOptimizer,
-    "adam": tf.train.AdamOptimizer,
-    "sgd": tf.train.GradientDescentOptimizer,
+    "rmsprop": tf.keras.optimizers.RMSPropOptimizer,
+    "adam": tf.keras.optimizers.Adam,
+    "nadam": tf.keras.optimizers.Nadam,
+    "sgd": tf.keras.optimizers.GradientDescentOptimizer,
     }
 
 def main(args):
