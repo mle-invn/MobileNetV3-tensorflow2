@@ -49,7 +49,7 @@ def _parse_function(data, shape, num_classes, channels):
     label = data["label"]
 
     image = tf.cast(image, dtype=tf.float32)
-    image = tf.image.resize_images(image, (height,width))
+    image = tf.image.images(image, (height,width))
     image = tf.reshape(image, (height,width, channels))
     image = image / 255.0
     image = image - 0.5
