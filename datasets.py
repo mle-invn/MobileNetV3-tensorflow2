@@ -31,7 +31,7 @@ def build_dataset(
 
     [ds_train, ds_test], info = tfds.load(name=name, split=["train", "test"], with_info=True)
     dataset["num_classes"] = info.features["label"].num_classes
-    dataset["channels"] = ds_train.output_shapes["image"][-1].value
+    dataset["channels"] = info.features['image'].shape[-1]
 
     ds_train = ds_train.shuffle(1024).repeat()
     ds_train = ds_train.map(lambda data: _parse_function(data, shape, dataset["num_classes"], dataset["channels"]))
