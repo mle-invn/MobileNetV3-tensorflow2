@@ -1,31 +1,8 @@
-# Copyright 2019 Bisonai Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-"""Implementation of paper Searching for MobileNetV3, https://arxiv.org/abs/1905.02244
-
-Layers of MobileNetV3
-"""
-import tensorflow as tf
-
-from utils import get_layer
-
-
 class Identity(tf.keras.layers.Layer):
     def __init__(self):
         super().__init__(name="Identity")
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         return input
 
 
@@ -34,7 +11,7 @@ class ReLU6(tf.keras.layers.Layer):
         super().__init__(name="ReLU6")
         self.relu6 = tf.keras.layers.ReLU(max_value=6, name="ReLU6")
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         return self.relu6(input)
 
 
@@ -43,7 +20,7 @@ class HardSigmoid(tf.keras.layers.Layer):
         super().__init__(name="HardSigmoid")
         self.relu6 = ReLU6()
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         return self.relu6(input + 3.0) / 6.0
 
 
@@ -52,7 +29,7 @@ class HardSwish(tf.keras.layers.Layer):
         super().__init__(name=name)
         self.hard_sigmoid = HardSigmoid()
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         return input * self.hard_sigmoid(input)
 
 
@@ -60,10 +37,11 @@ class Squeeze(tf.keras.layers.Layer):
     """Squeeze the second and third dimensions of given tensor.
     (batch, 1, 1, channels) -> (batch, channels)
     """
+
     def __init__(self):
         super().__init__(name="Squeeze")
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         x = tf.keras.backend.squeeze(input, 1)
         x = tf.keras.backend.squeeze(x, 1)
         return x
@@ -74,6 +52,7 @@ class GlobalAveragePooling2D(tf.keras.layers.Layer):
     where rows and cols are equal to 1. Output shape of
     `tf.keras.layer.GlobalAveragePooling2D` is (batch_size, channels),
     """
+
     def __init__(self):
         super().__init__(name="GlobalAveragePooling2D")
 
@@ -86,7 +65,7 @@ class GlobalAveragePooling2D(tf.keras.layers.Layer):
 
         super().build(input_shape)
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         return self.gap(input)
 
 
@@ -94,9 +73,10 @@ class BatchNormalization(tf.keras.layers.Layer):
     """Searching fo MobileNetV3: All our convolutional layers
     use batch-normalization layers with average decay of 0.99.
     """
+
     def __init__(
             self,
-            momentum: float=0.99,
+            momentum: float = 0.99,
             name="BatchNormalization",
     ):
         super().__init__(name=name)
@@ -106,7 +86,7 @@ class BatchNormalization(tf.keras.layers.Layer):
             name="BatchNormalization",
         )
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         return self.bn(input)
 
 
@@ -114,14 +94,14 @@ class ConvNormAct(tf.keras.layers.Layer):
     def __init__(
             self,
             filters: int,
-            kernel_size: int=3,
-            stride: int=1,
-            padding: int=0,
-            norm_layer: str=None,
-            act_layer: str="relu",
-            use_bias: bool=True,
-            l2_reg: float=1e-5,
-            name: str="ConvNormAct",
+            kernel_size: int = 3,
+            stride: int = 1,
+            padding: int = 0,
+            norm_layer: str = None,
+            act_layer: str = "relu",
+            use_bias: bool = True,
+            l2_reg: float = 1e-5,
+            name: str = "ConvNormAct",
     ):
         super().__init__(name=name)
 
@@ -144,7 +124,7 @@ class ConvNormAct(tf.keras.layers.Layer):
 
         _available_normalization = {
             "bn": BatchNormalization(),
-            }
+        }
         self.norm = get_layer(norm_layer, _available_normalization, Identity())
 
         _available_activation = {
@@ -156,7 +136,7 @@ class ConvNormAct(tf.keras.layers.Layer):
         }
         self.act = get_layer(act_layer, _available_activation, Identity())
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         x = self.pad(input)
         x = self.conv(x)
         x = self.norm(x)
@@ -173,7 +153,7 @@ class Bneck(tf.keras.layers.Layer):
             stride: int,
             use_se: bool,
             act_layer: str,
-            l2_reg: float=1e-5,
+            l2_reg: float = 1e-5,
     ):
         super().__init__(name="Bneck")
 
@@ -233,7 +213,7 @@ class Bneck(tf.keras.layers.Layer):
         self.in_channels = int(input_shape[3])
         super().build(input_shape)
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         x = self.expand(input)
         x = self.pad(x)
         x = self.depthwise(x)
@@ -252,9 +232,9 @@ class Bneck(tf.keras.layers.Layer):
 class SEBottleneck(tf.keras.layers.Layer):
     def __init__(
             self,
-            reduction: int=4,
-            l2_reg: float=0.01,
-            name: str="SEBottleneck",
+            reduction: int = 4,
+            l2_reg: float = 0.01,
+            name: str = "SEBottleneck",
     ):
         super().__init__(name=name)
 
@@ -285,7 +265,7 @@ class SEBottleneck(tf.keras.layers.Layer):
 
         super().build(input_shape)
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         x = self.gap(input)
         x = self.conv1(x)
         x = self.conv2(x)
@@ -332,7 +312,7 @@ class LastStage(tf.keras.layers.Layer):
         )
         self.squeeze = Squeeze()
 
-    def call(self, input):
+    def call(self, input, **kwargs):
         x = self.conv1(input)
         x = self.gap(x)
         x = self.conv2(x)
